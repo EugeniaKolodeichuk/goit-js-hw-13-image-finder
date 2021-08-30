@@ -1,33 +1,70 @@
 import './sass/main.scss';
-// //import './styles.css';
-import './main.js';
-import { error, defaultModules } from  '../node_modules/@pnotify/core/dist/PNotify.js';
+import photoCardsTpl from './template.hbs';
+import { alert, error, defaultModules, success } from  '../node_modules/@pnotify/core/dist/PNotify.js';
 import * as PNotifyMobile from '../node_modules/@pnotify/mobile/dist/PNotifyMobile.js';
-import '@pnotify/core/dist/Material.css';
 import '@pnotify/core/dist/BrightTheme.css';
-// const Handlebars = require("handlebars");
-// const template = Handlebars.compile("Name: {{name}}");
-// console.log(template({ name: "Nils" }));
+import refs from "./refs.js";
+//import '../node_modules/basiclightbox/dist/basiclightbox.min.css'
+import { onGalleryClick } from './modal.js'
+let currentPage = 1;
+const KEY_API = '23070790-299ad5e8dfdc75cc527267990';
+const BASE_URL = 'https://pixabay.com/api/?image_type=photo&orientation=horizontal'
 
-/* //Ваня
-import api from "./apiService"
 
-const input = document.querySelector("input");
-input.addEventListener("input", handleChange)
-
-let arrayPicture = [];
-
-function handleChange(e) {
-    console.log(e.target.value)
-    api.word = e.target.value;
+const handlerSubmit = (e) => {
+  e.preventDefault();
+  const value = refs.input.value;
+  
+  fetch(`${BASE_URL}&q=${value}&page=${currentPage}&per_page=12&key=${KEY_API}`)
+  .then(response => response.json())
+  .then(photo =>
+    {
+    if (photo.hits.length === 0) {
+      return  error({
+        text: 'Incorrect data. Please enter your request again',
+        delay: 2000,
+      });
+    } else renderPhoto(photo.hits);
+    //refs.loadMore.scrollIntoView({behavior: 'smooth',block: 'end'});
+    loadMoreSkroll()
     
-    arrayPicture = api.returnInfo();
-    console.log("arrayPicture: ", arrayPicture)
+    
+    })
+  .then(() => currentPage++)
+      .catch(err => {
+          defaultModules.set(PNotifyMobile, {});
+      clearPhotoUl ()
+  error({
+  text: '404 Not found'
+});})
 }
 
-console.dir(input);
+function loadMoreSkroll() {
+  try {
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth',
+      });
+    }, 200);
+  } catch (error) {
+      clearPhotoUl ()
+    console.log(error);
+  }
+}
 
-api.getPictures(); */
+refs.searchForm.addEventListener('submit', handlerSubmit)
+refs.loadMore.addEventListener('click', handlerSubmit)
 
 
+
+function renderPhoto (photo) {
+    refs.gallery.insertAdjacentHTML('beforeend', photoCardsTpl(photo))
+    refs.loadMore.classList.replace("load-more_hide", "load-more_visible");
+    refs.gallery.addEventListener('click', onGalleryClick);
+  }
+  
+function clearPhotoUl () {
+      refs.gallery.innerHTML = '';
+  }
 
