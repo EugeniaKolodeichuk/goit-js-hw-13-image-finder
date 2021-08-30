@@ -69,3 +69,31 @@ i .material-items {
   border-radius: 5px;
   outline: none;
 }
+
+.btn-search {
+  margin-left: 30px;
+  background-color: lavender;
+  width: 150px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+form {
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+  height: 40px;
+}
+
+.load-more_hide {
+  display: none;
+}
+
+.load-more_visible {
+  margin: 0 auto;
+  display: block;
+  background-color: #40E0D0;
+  width: 150px;
+  height: 40px;
+  border-radius: 10px;
+}

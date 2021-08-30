@@ -1,4 +1,4 @@
-import template from './template.hbs';
+/* import template from './template.hbs';
 import refs from './refs';
 
 export default {
@@ -11,4 +11,4 @@ export default {
     clean() {
         refs.list.innerHTML = '';
     },
-};
+}; */

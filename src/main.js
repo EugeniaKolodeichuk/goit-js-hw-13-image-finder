@@ -1,4 +1,4 @@
-import axios from 'axios';
+/* import axios from 'axios';
 import api from './apiService'
 import render from './renderImg';
 import refs from './refs';
@@ -35,5 +35,5 @@ const loadMoreHandler = () => {
 };
 
 refs.form.addEventListener('submit', submitHandler);
-refs.button.addEventListener('click', loadMoreHandler);
+refs.button.addEventListener('click', loadMoreHandler); */
 
