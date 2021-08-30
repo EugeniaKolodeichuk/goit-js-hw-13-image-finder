@@ -1,70 +1,122 @@
 import './sass/main.scss';
 import photoCardsTpl from './template.hbs';
-import { alert, error, defaultModules, success } from  '../node_modules/@pnotify/core/dist/PNotify.js';
+import { error,   defaultModules } from '../node_modules/@pnotify/core/dist/PNotify.js';
 import * as PNotifyMobile from '../node_modules/@pnotify/mobile/dist/PNotifyMobile.js';
 import '@pnotify/core/dist/BrightTheme.css';
-import refs from "./refs.js";
-//import '../node_modules/basiclightbox/dist/basiclightbox.min.css'
-import { onGalleryClick } from './modal.js'
-let currentPage = 1;
+import refs from './refs.js';
+import * as basicLightbox from 'basiclightbox';
+import 'basiclightbox/dist/basicLightbox.min.css';
+
+//переменные и общие настройки
 const KEY_API = '23070790-299ad5e8dfdc75cc527267990';
-const BASE_URL = 'https://pixabay.com/api/?image_type=photo&orientation=horizontal'
+const BASE_URL = 'https://pixabay.com/api/?image_type=photo&orientation=horizontal';
+let page = 1;
+let searchValue = '';
 
 
-const handlerSubmit = (e) => {
+//запрос на бэкенд
+const handlerSubmit = e => {
   e.preventDefault();
-  const value = refs.input.value;
-  
-  fetch(`${BASE_URL}&q=${value}&page=${currentPage}&per_page=12&key=${KEY_API}`)
-  .then(response => response.json())
-  .then(photo =>
-    {
-    if (photo.hits.length === 0) {
-      return  error({
-        text: 'Incorrect data. Please enter your request again',
-        delay: 2000,
-      });
-    } else renderPhoto(photo.hits);
-    //refs.loadMore.scrollIntoView({behavior: 'smooth',block: 'end'});
-    loadMoreSkroll()
-    
-    
+
+  if (searchValue === refs.input.value) return;
+
+  searchValue = refs.input.value;
+
+  fetch(`${BASE_URL}&q=${searchValue}&page=${page}&per_page=12&key=${KEY_API}`)
+    .then(response => response.json())
+    .then(photo => {
+      if (photo.hits.length === 0) {
+        return error({
+          text: 'Please specify the request',
+          delay: 1000,
+        });
+      } else {
+        clearGallery();
+        renderPhoto(photo.hits);
+      }
     })
-  .then(() => currentPage++)
-      .catch(err => {
-          defaultModules.set(PNotifyMobile, {});
-      clearPhotoUl ()
-  error({
-  text: '404 Not found'
-});})
+    .then(() => page++)
+    .then(clearInput)
+    .catch(err => {
+      defaultModules.set(PNotifyMobile, {});
+      clearGallery();
+      error({
+          text: 'Nothing found',
+          delay: 1000,
+      });
+    });
+};
+
+//загрузка Load more...
+function loadMore(e) {
+  e.preventDefault();
+
+  fetch(`${BASE_URL}&q=${searchValue}&page=${page}&per_page=12&key=${KEY_API}`)
+    .then(response => response.json())
+    .then(photo => {
+      if (photo.hits.length === 0) {
+        return error({
+          text: 'No more images',
+          delay: 2000,
+        });
+      } else {
+        renderPhoto(photo.hits);
+      }
+    })
+    .then(() => page++)
+    .then(() => loadMoreSkroll())
+    .catch(err => {
+      defaultModules.set(PNotifyMobile, {});
+      clearGallery();
+      error({
+        text: 'Nothing found',
+      });
+    });
 }
 
 function loadMoreSkroll() {
   try {
+    let top = window.scrollY + window.innerHeight;
+
     setTimeout(() => {
       window.scrollTo({
-        top: document.body.scrollHeight,
+        top,
         behavior: 'smooth',
       });
     }, 200);
   } catch (error) {
-      clearPhotoUl ()
+    clearGallery();
     console.log(error);
   }
 }
 
-refs.searchForm.addEventListener('submit', handlerSubmit)
-refs.loadMore.addEventListener('click', handlerSubmit)
+refs.form.addEventListener('submit', handlerSubmit);
+refs.loadMore.addEventListener('click', loadMore);
 
-
-
-function renderPhoto (photo) {
-    refs.gallery.insertAdjacentHTML('beforeend', photoCardsTpl(photo))
-    refs.loadMore.classList.replace("load-more_hide", "load-more_visible");
-    refs.gallery.addEventListener('click', onGalleryClick);
-  }
+//открытие модального окна
+function modalClick(e) {
+    e.preventDefault();
+    if (e.target.nodeName !== 'IMG') {
+      return;
+    }
+    const imgSrc = e.target.src;
+    const instance = basicLightbox.create(`<img src=${imgSrc} width="800" height="600">`);
+    instance.show();
+}
   
-function clearPhotoUl () {
-      refs.gallery.innerHTML = '';
-  }
+//вставка формы на экран
+function renderPhoto(photo) {
+  refs.gallery.insertAdjacentHTML('beforeend', photoCardsTpl(photo));
+  refs.loadMore.classList.replace('load-more_hide', 'load-more_visible');
+  refs.gallery.addEventListener('click', modalClick);
+}
 
+//очистка формы после ввода
+function clearGallery() {
+  refs.gallery.innerHTML = '';
+}
+
+//очистка при вводе с ошибкой
+function clearInput() {
+  refs.input.value = '';
+}
